@@ -201,7 +201,13 @@ class SqlQueryBuilder {
      */
     private function addParams (&$query, $params) {
         foreach ($params as $key => $value) {
-            $query = str_replace("{$key}", $this->stringEscape($value), $query);
+            $safeValue = $this->stringEscape($value);
+
+            if (is_string($safeValue)) {
+                $safeValue = '"' . $safeValue . '"';
+            }
+
+            $query = str_replace("{$key}", $this->stringEscape($safeValue), $query);
         }
     }
 
@@ -222,6 +228,54 @@ class SqlQueryBuilder {
         } 
     
         return $string; 
+    }
+
+    /**
+     * @param string $sqlQuery
+     * @param array $params
+     * @return string
+     */
+    public function createCommand ($sqlQuery = '', $params = []) {
+        return $this->buildWhereQuery($sqlQuery, $params);
+    }
+
+    /**
+     * @param string $tableName
+     * @param array $updateArray
+     * @param string $condition
+     * @param array $params
+     * @return null|string
+     */
+    public function update ($tableName = '', $updateArray = [], $condition = '', $params = []) {
+        if (!$tableName || !$updateArray) {
+            return null;
+        }
+
+        $updateQuery = 'UPDATE ' . $tableName . ' ';
+        $updateQueryColumns = 'SET ';
+        $updateQueryCondition = '';
+
+        foreach ($updateArray as $key => $value) {
+            $safeKey = $this->stringEscape($key);
+            $safeValue = $this->stringEscape($value);
+
+            if (is_string($safeValue)) {
+                $safeValue = '"' . $safeValue . '"';
+                $updateQueryColumns .= $safeKey . ' = ' . $safeValue . ', ';
+            }
+
+            $updateQueryColumns .= $safeKey . ' = ' . $safeValue . ', ';
+        }
+
+        $updateQueryColumns = rtrim($updateQueryColumns, ', ') . ' ';
+
+        if ($condition) {
+            $updateQueryCondition = 'WHERE ' . $this->buildWhereQuery($condition, $params);
+        }
+
+        return $updateQuery
+            .$updateQueryColumns
+            .$updateQueryCondition;
     }
 
     /**
