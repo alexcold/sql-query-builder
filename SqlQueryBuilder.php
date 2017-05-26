@@ -3,7 +3,7 @@
 /**
  * The simple sql query builder
  * 
- * @author Aleksandr Cerkasov <coldworld@gmail.com>
+ * @author Aleksandr Cerkasov <coldworld333@gmail.com>
  */
 class SqlQueryBuilder {
     /**
